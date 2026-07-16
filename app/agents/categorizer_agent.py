@@ -1,7 +1,17 @@
-"""Categorization Agent (hybrid: rules first, LLM fallback).
+"""Categorization Agent (hybrid: rules first, LLM fallback) — STUB.
 
-Categorizes normalized transactions, identifies recurring expenses, and
-detects subscriptions. Known merchants/patterns are matched with rules;
-unrecognized merchants fall back to an LLM call. Reads normalized
-records for a run_id, writes categorized transactions.
+Will: read this run's normalized transactions, categorize them (rules for
+known merchants, LLM fallback for unknown), flag recurring expenses and
+subscriptions, and write the categories back. No-op for now.
 """
+
+from app.agents.base import AgentContext, BaseAgent
+from app.pipeline.stages import Stage
+
+
+class CategorizerAgent(BaseAgent):
+    stage = Stage.categorize
+
+    def run(self, ctx: AgentContext) -> None:
+        # TODO: rules -> LLM fallback -> update transaction categories/flags.
+        return None

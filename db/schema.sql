@@ -30,3 +30,19 @@ create table if not exists public.documents (
 );
 
 create index if not exists documents_user_id_idx on public.documents(user_id);
+
+-- Pipeline runs -------------------------------------------------------------
+-- One row per pipeline execution. `stages` is the per-stage progress the
+-- frontend polls; status is the overall run state.
+create table if not exists public.runs (
+    id            uuid primary key default gen_random_uuid(),
+    user_id       uuid not null references public.users(id) on delete cascade,
+    status        text not null default 'pending',
+    current_stage text,
+    stages        jsonb not null default '[]'::jsonb,
+    error         text,
+    created_at    timestamptz not null default now(),
+    updated_at    timestamptz not null default now()
+);
+
+create index if not exists runs_user_id_idx on public.runs(user_id);
