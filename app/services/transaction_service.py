@@ -48,6 +48,19 @@ def list_transactions(run_id: str) -> list[Transaction]:
     return [Transaction(**row) for row in resp.data]
 
 
+def list_subscriptions(run_id: str) -> list[Transaction]:
+    """Return the run's transactions flagged as subscriptions."""
+    db = get_supabase()
+    resp = (
+        db.table(TABLE)
+        .select("*")
+        .eq("run_id", run_id)
+        .eq("is_subscription", True)
+        .execute()
+    )
+    return [Transaction(**row) for row in resp.data]
+
+
 def apply_categorizations(updates: list[CategoryUpdate]) -> None:
     """Persist categorizer results.
 

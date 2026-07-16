@@ -44,6 +44,18 @@ def get_run(run_id: str) -> Run | None:
     return Run(**resp.data[0])
 
 
+def get_latest_run(user_id: str, status: str | None = None) -> Run | None:
+    """Return a user's most recent run, optionally filtered by status."""
+    db = get_supabase()
+    query = db.table(TABLE).select("*").eq("user_id", user_id)
+    if status is not None:
+        query = query.eq("status", status)
+    resp = query.order("created_at", desc=True).limit(1).execute()
+    if not resp.data:
+        return None
+    return Run(**resp.data[0])
+
+
 def _save(run: Run) -> Run:
     db = get_supabase()
     payload = {

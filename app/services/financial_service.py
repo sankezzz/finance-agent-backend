@@ -27,3 +27,19 @@ def get_snapshot(run_id: str) -> Snapshot | None:
     if not resp.data:
         return None
     return Snapshot(**resp.data[0])
+
+
+def get_latest_snapshot(user_id: str) -> Snapshot | None:
+    """Return the user's most recently computed snapshot (latest analysis)."""
+    db = get_supabase()
+    resp = (
+        db.table(TABLE)
+        .select("*")
+        .eq("user_id", user_id)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    if not resp.data:
+        return None
+    return Snapshot(**resp.data[0])

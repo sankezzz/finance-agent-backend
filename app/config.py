@@ -32,9 +32,17 @@ class Settings(BaseSettings):
     # truncated mid-tool-call (which surfaces as Groq's tool_use_failed).
     GROQ_MAX_TOKENS: int = 25000
 
+    # Comma-separated allowed origins for CORS ("*" = allow all, fine for MVP
+    # since we don't use cookies — the frontend sends user_id explicitly).
+    CORS_ORIGINS: str = "*"
+
     # Optional — used by the auth/JWT-verification phase, not the DB client.
     SUPABASE_PUBLISHABLE_KEY: str | None = None
     SUPABASE_JWKS_URL: str | None = None
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
 
 @lru_cache
