@@ -18,6 +18,28 @@ class TransactionDirection(str, Enum):
     debit = "debit"    # money out
 
 
+class TransactionCategory(str, Enum):
+    """Fixed spend/income taxonomy the categorizer assigns.
+
+    Subscriptions are NOT a category — they're captured by the
+    `is_subscription` flag, since a subscription still has a real purpose
+    (e.g. Netflix is Entertainment). Keeps category = "what it's for".
+    """
+
+    food = "Food"
+    rent = "Rent"
+    utilities = "Utilities"
+    shopping = "Shopping"
+    travel = "Travel"
+    entertainment = "Entertainment"
+    emi_loan = "EMI_Loan"
+    health = "Health"
+    investment = "Investment"  # SIP / mutual fund / stocks outflows — this is savings, not spend
+    income = "Income"
+    transfer = "Transfer"
+    other = "Other"
+
+
 class TransactionCreate(BaseModel):
     """Payload the parser agent writes to the DB."""
 

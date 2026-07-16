@@ -23,14 +23,20 @@ def get_llm() -> Groq:
 
 
 @lru_cache
-def get_structured_llm():
+def get_structured_llm(mode: str = "tools"):
     """Groq client wrapped with `instructor` for validated structured output.
 
     Agents pass a Pydantic `response_model` and get back a validated object
     (instructor retries the model on schema mismatch). Imported lazily so a
     plain `import app...` never requires the instructor package at import time.
+
+    mode="tools" uses function-calling (fine for capable models like scout).
+    mode="json" asks the model to return a raw JSON object instead — more
+    robust for smaller models (e.g. llama-3.1-8b) that mangle the tool-call
+    wrapper and trip Groq's tool_use_failed. Cached per mode.
     """
     import instructor
 
-    return instructor.from_groq(get_llm())
+    instructor_mode = instructor.Mode.JSON if mode == "json" else instructor.Mode.TOOLS
+    return instructor.from_groq(get_llm(), mode=instructor_mode)
 

@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     # (TPM 30K / TPD 500K — vs 12K/100K on llama-3.3-70b, which rate-limited us).
     GROQ_API_KEY: str
     PARSER_GROQ_MODEL: str = "meta-llama/llama-4-scout-17b-16e-instruct"
+    # Categorizer only classifies unknown merchant names (a small, easy task),
+    # so a fast/cheap model is fine — and it uses a separate TPM bucket from
+    # the parser's model.
+    CATEGORIZER_GROQ_MODEL: str = "llama-3.1-8b-instant"
     # Cap output high enough that a full statement's extracted JSON isn't
     # truncated mid-tool-call (which surfaces as Groq's tool_use_failed).
     GROQ_MAX_TOKENS: int = 25000
