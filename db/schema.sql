@@ -92,3 +92,38 @@ create table if not exists public.financial_facts (
 
 create index if not exists financial_facts_run_id_idx on public.financial_facts(run_id);
 create index if not exists financial_facts_user_id_idx on public.financial_facts(user_id);
+
+-- Financial snapshot --------------------------------------------------------
+-- One computed metrics row per run (analysis agent output). run_id is unique
+-- so re-analysing a run overwrites its snapshot.
+create table if not exists public.financial_snapshots (
+    id                       uuid primary key default gen_random_uuid(),
+    run_id                   uuid not null unique references public.runs(id) on delete cascade,
+    user_id                  uuid not null references public.users(id) on delete cascade,
+    period_start             date,
+    period_end               date,
+    months                   numeric not null default 1,
+    monthly_income           numeric not null default 0,
+    monthly_expenses         numeric not null default 0,
+    monthly_debt_payments    numeric not null default 0,
+    monthly_investments      numeric not null default 0,
+    net_cash_flow            numeric not null default 0,
+    essential_expenses       numeric not null default 0,
+    discretionary_expenses   numeric not null default 0,
+    subscription_count       int not null default 0,
+    subscriptions_monthly    numeric not null default 0,
+    savings_rate             numeric not null default 0,
+    debt_to_income           numeric not null default 0,
+    total_assets             numeric not null default 0,
+    total_liabilities        numeric not null default 0,
+    emergency_runway_months  numeric,
+    health_score             numeric not null default 0,
+    savings_score            numeric not null default 0,
+    debt_score               numeric not null default 0,
+    runway_score             numeric not null default 0,
+    expense_breakdown        jsonb not null default '{}'::jsonb,
+    monthly_trend            jsonb not null default '[]'::jsonb,
+    created_at               timestamptz not null default now()
+);
+
+create index if not exists financial_snapshots_user_id_idx on public.financial_snapshots(user_id);

@@ -68,7 +68,14 @@ _RULES: list[tuple[TransactionCategory, tuple[str, ...]]] = [
         "croma", "reliance digital", "decathlon", "lifestyle", "ikea",
     )),
     (TransactionCategory.rent, ("rent", "landlord")),
-    (TransactionCategory.transfer, ("atm", "atm wdl", "cash withdrawal")),
+    # Card bill payments and ATM cash are money moving, NOT new spend/debt.
+    # Categorizing a credit-card bill payment here (Transfer, excluded from the
+    # spend ratios) avoids double-counting: the card's actual purchases are
+    # already captured as expenses via the credit-card statement's transactions.
+    (TransactionCategory.transfer, (
+        "atm", "atm wdl", "cash withdrawal", "credit card payment",
+        "card payment", "cc payment", "credit card bill",
+    )),
 ]
 
 # Recurring charges to a service (implies is_recurring). Kept separate from the
