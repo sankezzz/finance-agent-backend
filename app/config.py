@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     # so a fast/cheap model is fine — and it uses a separate TPM bucket from
     # the parser's model.
     CATEGORIZER_GROQ_MODEL: str = "llama-3.1-8b-instant"
+    # Recommendations are quality-sensitive (advice grounded in the numbers),
+    # so use a stronger model. One short call per run — TPM isn't a concern.
+    RECOMMENDATION_GROQ_MODEL: str = "llama-3.3-70b-versatile"
     # Cap output high enough that a full statement's extracted JSON isn't
     # truncated mid-tool-call (which surfaces as Groq's tool_use_failed).
     GROQ_MAX_TOKENS: int = 25000
