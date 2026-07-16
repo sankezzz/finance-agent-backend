@@ -7,7 +7,7 @@ are registered here once they exist.
 
 from fastapi import FastAPI
 
-from app.api.routes import onboarding
+from app.api.routes import documents, onboarding
 
 app = FastAPI(title="Personal Finance Copilot")
 
@@ -19,10 +19,10 @@ def health() -> dict:
 
 # --- Routers ---------------------------------------------------------------
 app.include_router(onboarding.router)
+app.include_router(documents.router)
 
 # Registered as each feature lands:
-# from app.api.routes import documents, pipeline, dashboard, profile, chat
-# app.include_router(documents.router)
+# from app.api.routes import pipeline, dashboard, profile, chat
 # app.include_router(pipeline.router)
 # app.include_router(dashboard.router)
 # app.include_router(profile.router)
