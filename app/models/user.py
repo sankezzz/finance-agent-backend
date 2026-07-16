@@ -41,7 +41,9 @@ class UserCreate(BaseModel):
 
     name: str = Field(min_length=1)
     age: int = Field(ge=1, le=120)
-    monthly_income: float = Field(ge=0)
+    # Optional: documents (salary slip / bank credits) are the source of truth;
+    # this is a fallback used only when no income can be derived from them.
+    monthly_income: float | None = Field(default=None, ge=0)
     dependents: int = Field(ge=0, default=0)
     existing_loans: list[Loan] = Field(default_factory=list)
     financial_goals: list[FinancialGoal] = Field(default_factory=list)

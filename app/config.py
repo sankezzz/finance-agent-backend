@@ -29,8 +29,9 @@ class Settings(BaseSettings):
     # so use a stronger model. One short call per run — TPM isn't a concern.
     RECOMMENDATION_GROQ_MODEL: str = "llama-3.3-70b-versatile"
     # Cap output high enough that a full statement's extracted JSON isn't
-    # truncated mid-tool-call (which surfaces as Groq's tool_use_failed).
-    GROQ_MAX_TOKENS: int = 25000
+    # truncated mid-tool-call, but within the model's ceiling: llama-4-scout
+    # allows at most 8192 output tokens, so keep this <= 8192. 
+    GROQ_MAX_TOKENS: int = 8000 #this is the output tokens
 
     # Comma-separated allowed origins for CORS ("*" = allow all, fine for MVP
     # since we don't use cookies — the frontend sends user_id explicitly).
