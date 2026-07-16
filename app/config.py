@@ -16,7 +16,14 @@ class Settings(BaseSettings):
     SUPABASE_SECRET_KEY: str
 
     # LLM provider (Groq for now; abstracted behind app/llm/client.py).
+    # llama-4-scout: non-reasoning (no wasted "thinking" tokens), reliable
+    # tool-calling, and the best free-tier limits for extraction-sized calls
+    # (TPM 30K / TPD 500K — vs 12K/100K on llama-3.3-70b, which rate-limited us).
     GROQ_API_KEY: str
+    PARSER_GROQ_MODEL: str = "meta-llama/llama-4-scout-17b-16e-instruct"
+    # Cap output high enough that a full statement's extracted JSON isn't
+    # truncated mid-tool-call (which surfaces as Groq's tool_use_failed).
+    GROQ_MAX_TOKENS: int = 25000
 
     # Optional — used by the auth/JWT-verification phase, not the DB client.
     SUPABASE_PUBLISHABLE_KEY: str | None = None

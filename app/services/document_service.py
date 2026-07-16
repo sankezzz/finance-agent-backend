@@ -61,3 +61,15 @@ def list_documents(user_id: str) -> list[Document]:
         .execute()
     )
     return [Document(**row) for row in resp.data]
+
+
+def set_status(document_id: str, status: DocumentStatus) -> None:
+    """Update a document's processing status."""
+    db = get_supabase()
+    db.table(TABLE).update({"status": status.value}).eq("id", str(document_id)).execute()
+
+
+def download_document(storage_path: str) -> bytes:
+    """Download the raw file bytes from storage (used by the parser agent)."""
+    db = get_supabase()
+    return db.storage.from_(BUCKET).download(storage_path)

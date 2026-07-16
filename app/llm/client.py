@@ -13,7 +13,24 @@ from app.config import get_settings
 
 @lru_cache
 def get_llm() -> Groq:
-    """Return the shared Groq client (created once, then cached)."""
+    """Return the shared Groq client (created once, then cached).
+
+    max_retries lets the SDK automatically back off and retry on 429
+    rate-limit responses (respecting the retry-after header).
+    """
     settings = get_settings()
-    return Groq(api_key=settings.GROQ_API_KEY)
+    return Groq(api_key=settings.GROQ_API_KEY, max_retries=5)
+
+
+@lru_cache
+def get_structured_llm():
+    """Groq client wrapped with `instructor` for validated structured output.
+
+    Agents pass a Pydantic `response_model` and get back a validated object
+    (instructor retries the model on schema mismatch). Imported lazily so a
+    plain `import app...` never requires the instructor package at import time.
+    """
+    import instructor
+
+    return instructor.from_groq(get_llm())
 

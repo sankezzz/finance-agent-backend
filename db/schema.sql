@@ -46,3 +46,49 @@ create table if not exists public.runs (
 );
 
 create index if not exists runs_user_id_idx on public.runs(user_id);
+
+-- Transactions --------------------------------------------------------------
+-- Ledger line-items extracted from bank & credit-card statements. Scoped to a
+-- run_id so each run owns its own set (re-running never duplicates). category
+-- and the recurring/subscription flags are filled later by the categorizer.
+create table if not exists public.transactions (
+    id              uuid primary key default gen_random_uuid(),
+    run_id          uuid not null references public.runs(id) on delete cascade,
+    user_id         uuid not null references public.users(id) on delete cascade,
+    document_id     uuid references public.documents(id) on delete set null,
+    txn_date        date,
+    description     text not null,
+    amount          numeric not null,
+    direction       text not null check (direction in ('credit', 'debit')),
+    currency        text not null default 'INR',
+    merchant        text,
+    category        text,
+    is_recurring    boolean not null default false,
+    is_subscription boolean not null default false,
+    metadata        jsonb not null default '{}'::jsonb,
+    created_at      timestamptz not null default now()
+);
+
+create index if not exists transactions_run_id_idx on public.transactions(run_id);
+create index if not exists transactions_user_id_idx on public.transactions(user_id);
+
+-- Financial facts -----------------------------------------------------------
+-- Point-in-time figures (NOT ledger line-items): salary, loan outstanding,
+-- investment/FD value, credit-card outstanding. These feed the Income /
+-- Assets / Liabilities sections of the profile. Also run-scoped.
+create table if not exists public.financial_facts (
+    id           uuid primary key default gen_random_uuid(),
+    run_id       uuid not null references public.runs(id) on delete cascade,
+    user_id      uuid not null references public.users(id) on delete cascade,
+    document_id  uuid references public.documents(id) on delete set null,
+    kind         text not null check (kind in ('income', 'expense', 'asset', 'liability')),
+    subtype      text not null,
+    label        text,
+    amount       numeric not null,
+    currency     text not null default 'INR',
+    metadata     jsonb not null default '{}'::jsonb,
+    created_at   timestamptz not null default now()
+);
+
+create index if not exists financial_facts_run_id_idx on public.financial_facts(run_id);
+create index if not exists financial_facts_user_id_idx on public.financial_facts(user_id);
