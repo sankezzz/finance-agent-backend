@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # Recommendations are quality-sensitive (advice grounded in the numbers),
     # so use a stronger model. One short call per run — TPM isn't a concern.
     RECOMMENDATION_GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    # Chat is high-frequency (many messages), so favour a model with generous
+    # rate limits (scout: TPM 30K / TPD 500K) that's still good at grounded Q&A.
+    CHAT_GROQ_MODEL: str = "meta-llama/llama-4-scout-17b-16e-instruct"
     # Cap output high enough that a full statement's extracted JSON isn't
     # truncated mid-tool-call, but within the model's ceiling: llama-4-scout
     # allows at most 8192 output tokens, so keep this <= 8192. 

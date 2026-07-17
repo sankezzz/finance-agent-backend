@@ -27,6 +27,7 @@ POST /documents        (once per file, multipart)
 POST /pipeline/runs    { user_id }   → run_id   (202; pipeline runs in background)
 GET  /pipeline/runs/{run_id}         → poll until status == "done"
 GET  /dashboard/{user_id}            → the whole dashboard payload
+POST /chat             { user_id, messages[] }  → assistant reply (grounded)
 ```
 
 ---
@@ -134,6 +135,44 @@ run is `done`.
 
 **Errors**: `404` user not found · `404` `"No analysis yet…"` if the user has no
 completed snapshot.
+
+---
+
+### `POST /chat`
+Ask a natural-language question about the user's finances. **Stateless** — the
+client holds the conversation and sends the full history each call; the server
+injects the user's latest snapshot as grounding and returns one reply. No
+session state on the server.
+
+**Request body**:
+```jsonc
+{
+  "user_id": "uuid",
+  "messages": [
+    { "role": "user",      "content": "How much do I spend on food?" },
+    { "role": "assistant", "content": "About ₹3,159/month." },
+    { "role": "user",      "content": "And travel?" }
+  ]
+}
+```
+- `messages` must be non-empty, ordered oldest→newest, roles `user` / `assistant`
+  only (do **not** send a `system` message — the server adds it).
+- Send the whole running history each turn; the server forwards the **last 20**.
+
+**Response** `200`:
+```jsonc
+{ "role": "assistant", "content": "Your travel spend is about ₹2,481/month." }
+```
+
+**Errors**: `404` user not found · `404` `"No analysis yet…"` if the user has no
+completed snapshot (chat needs a finished analysis to ground on) · `422` empty
+`messages`.
+
+**Grounding**: the assistant answers only from the user's computed metrics
+(income, expenses, categories, ratios, subscriptions, assets/liabilities) — no
+raw transactions are sent, and it's instructed not to invent numbers. "What-if"
+questions (e.g. "save ₹30k/mo for 10 years") get a reasoned estimate with stated
+assumptions, not a guaranteed-exact calculation.
 
 ---
 
@@ -314,10 +353,21 @@ Sort/group by `priority` in the UI.
 
 ---
 
+### ChatMessage
+```jsonc
+{ "role": "user", "content": "How long will my emergency fund last?" }
+// role ∈ ChatRole (user | assistant). content is non-empty.
+```
+`ChatRequest` = `{ "user_id": string, "messages": ChatMessage[] }` (non-empty).
+`ChatResponse` = `{ "role": "assistant", "content": string }`.
+
+---
+
 ## Enums
 
 | Enum | Values |
 |---|---|
+| **ChatRole** | `user` · `assistant` |
 | **DocumentType** | `bank_statement` · `credit_card_statement` · `salary_slip` · `investment_statement` · `loan_statement` |
 | **DocumentStatus** | `uploaded` · `processing` · `parsed` · `failed` |
 | **RunStatus** | `pending` · `running` · `done` · `failed` |
@@ -341,4 +391,9 @@ Sort/group by `priority` in the UI.
 - `persona` is `null` today; the contract won't change when it ships — just start
   rendering it when it's non-null.
 - Document `url` is not populated yet (no in-app file preview); don't depend on it.
+- **Chat**: keep the message array in client state; append the user's message,
+  POST the whole array to `/chat`, then append the returned assistant message.
+  History is client-only (lost on refresh) — that's expected for the MVP. Show a
+  typing/loading state while the POST is in flight (one reply per call, no
+  streaming yet).
 ```

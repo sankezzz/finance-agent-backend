@@ -13,7 +13,7 @@ import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import dashboard, documents, onboarding, pipeline
+from app.api.routes import chat, dashboard, documents, onboarding, pipeline
 from app.config import get_settings
 
 # Self keep-alive: Render's free instance sleeps after ~15 min with no inbound
@@ -72,8 +72,8 @@ app.include_router(onboarding.router)
 app.include_router(documents.router)
 app.include_router(pipeline.router)
 app.include_router(dashboard.router)
+app.include_router(chat.router)
 
 # Registered as each feature lands:
-# from app.api.routes import profile, chat
+# from app.api.routes import profile
 # app.include_router(profile.router)
-# app.include_router(chat.router)
