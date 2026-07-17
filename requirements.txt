@@ -8,3 +8,4 @@ groq
 instructor
 pypdf
 openpyxl
+httpx
