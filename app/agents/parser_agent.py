@@ -70,7 +70,11 @@ class ParserAgent(BaseAgent):
         document_service.set_status(document.id, DocumentStatus.parsed)
 
     def _llm_parse(self, document: Document, safe_text: str) -> ParsedDocument:
-        client = get_structured_llm()
+        # JSON mode (not tool-calling): Groq's tool-call schema validation is
+        # strict and rejects the small quirks models produce (null vs [], string
+        # vs date, anyOf/nullable arrays). JSON mode skips that — instructor
+        # parses the JSON and validates with our lenient model instead.
+        client = get_structured_llm("json")
         settings = get_settings()
         return client.chat.completions.create(
             model=settings.PARSER_GROQ_MODEL,
