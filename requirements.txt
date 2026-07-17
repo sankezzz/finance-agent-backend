@@ -5,3 +5,6 @@ pydantic-settings
 supabase
 python-multipart
 groq
+instructor
+pypdf
+openpyxl

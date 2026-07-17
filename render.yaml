@@ -1,0 +1,34 @@
+# Render blueprint for the Personal Finance Copilot backend.
+# Render → New → Blueprint → connect this repo → it reads this file.
+# Secrets (sync: false) are entered in the dashboard, never committed.
+services:
+  - type: web
+    name: finance-agent-api
+    runtime: python
+    plan: free
+    region: singapore                 # closest free region to India (optional)
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.2"
+      # --- secrets: enter these in the Render dashboard when prompted ---
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      # --- non-secret config (safe to commit) ---
+      - key: PARSER_GROQ_MODEL
+        value: "meta-llama/llama-4-scout-17b-16e-instruct"
+      - key: CATEGORIZER_GROQ_MODEL
+        value: "llama-3.1-8b-instant"
+      - key: RECOMMENDATION_GROQ_MODEL
+        value: "llama-3.3-70b-versatile"
+      - key: GROQ_MAX_TOKENS
+        value: "8000"
+      # Set to your deployed frontend URL after it's live (keep "*" for now).
+      - key: CORS_ORIGINS
+        value: "*"
