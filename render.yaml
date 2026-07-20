@@ -20,15 +20,8 @@ services:
         sync: false
       - key: GROQ_API_KEY
         sync: false
-      # --- non-secret config (safe to commit) ---
-      - key: PARSER_GROQ_MODEL
-        value: "meta-llama/llama-4-scout-17b-16e-instruct"
-      - key: CATEGORIZER_GROQ_MODEL
-        value: "llama-3.1-8b-instant"
-      - key: RECOMMENDATION_GROQ_MODEL
-        value: "llama-3.3-70b-versatile"
-      - key: GROQ_MAX_TOKENS
-        value: "8000"
+      # Model choices live in app/config.py (committed) — not here, so there's
+      # a single source of truth. Change a model there and commit to deploy it.
       # Set to your deployed frontend URL after it's live (keep "*" for now).
       - key: CORS_ORIGINS
         value: "*"

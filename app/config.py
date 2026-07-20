@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # tool-calling, and the best free-tier limits for extraction-sized calls
     # (TPM 30K / TPD 500K — vs 12K/100K on llama-3.3-70b, which rate-limited us).
     GROQ_API_KEY: str
-    PARSER_GROQ_MODEL: str = "llama-3.1-8b-instant"
+    PARSER_GROQ_MODEL: str = "llama-3.3-70b-versatile"
     # Categorizer only classifies unknown merchant names (a small, easy task),
     # so a fast/cheap model is fine — and it uses a separate TPM bucket from
     # the parser's model.
