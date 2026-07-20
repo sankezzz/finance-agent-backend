@@ -21,6 +21,13 @@ class Settings(BaseSettings):
     # (TPM 30K / TPD 500K — vs 12K/100K on llama-3.3-70b, which rate-limited us).
     GROQ_API_KEY: str
     PARSER_GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    # Gemini is the PRIMARY parser provider — its free tier gives flash-lite
+    # 1M TPM / 1,500 RPD, which sidesteps Groq's tiny 6K TPM / 100K TPD walls
+    # that were causing 413/429 on statement parsing. Groq (PARSER_GROQ_MODEL
+    # above) stays as the automatic fallback if Gemini errors or the key is
+    # unset. GEMINI_API_KEY is a secret — set it in .env / the Render dashboard.
+    GEMINI_API_KEY: str | None = None
+    PARSER_GEMINI_MODEL: str = "gemini-3.1-flash-lite"  # cheap + huge free-tier TPM
     # Categorizer only classifies unknown merchant names (a small, easy task),
     # so a fast/cheap model is fine — and it uses a separate TPM bucket from
     # the parser's model.

@@ -13,11 +13,12 @@ from __future__ import annotations
 
 import csv
 import io
+import logging
 import os
 
 from app.agents.base import AgentContext, BaseAgent
 from app.config import get_settings
-from app.llm.client import get_structured_llm
+from app.llm.client import get_gemini_structured_llm, get_structured_llm
 from app.llm.prompts.parser import PARSER_SYSTEM, build_parser_prompt
 from app.core.security import scrub_text
 from app.models.document import Document, DocumentStatus
@@ -26,6 +27,8 @@ from app.models.parser import ParsedDocument
 from app.models.transaction import TransactionCreate
 from app.pipeline.stages import Stage
 from app.services import document_service, fact_service, transaction_service
+
+logger = logging.getLogger(__name__)
 
 _IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
 
@@ -70,22 +73,53 @@ class ParserAgent(BaseAgent):
         document_service.set_status(document.id, DocumentStatus.parsed)
 
     def _llm_parse(self, document: Document, safe_text: str) -> ParsedDocument:
+        settings = get_settings()
+        messages = [
+            {"role": "system", "content": PARSER_SYSTEM},
+            {"role": "user", "content": build_parser_prompt(document.doc_type, safe_text)},
+        ]
+
+        # Primary: Gemini (flash-lite) — its 1M TPM / 1,500 RPD free tier dwarfs
+        # Groq's 6K TPM / 100K TPD, so full statements parse without hitting the
+        # 413/429 walls. Fall back to Groq on ANY failure (rate limit, transient
+        # error) or when no Gemini key is configured.
+        if settings.GEMINI_API_KEY:
+            try:
+                return self._parse_with_gemini(messages, settings)
+            except Exception as exc:  # noqa: BLE001 — any Gemini failure → Groq
+                logger.warning(
+                    "Gemini parse failed for %s (%s); falling back to Groq",
+                    document.filename,
+                    exc,
+                )
+
+        return self._parse_with_groq(messages, settings)
+
+    def _parse_with_gemini(self, messages: list[dict], settings) -> ParsedDocument:
+        # instructor uses Gemini's native structured-output mode (provider-side
+        # schema enforcement) — more reliable than Groq's JSON mode.
+        client = get_gemini_structured_llm(settings.PARSER_GEMINI_MODEL)
+        return client.create(
+            response_model=ParsedDocument,
+            temperature=0,
+            max_tokens=settings.GROQ_MAX_TOKENS,
+            max_retries=2,  # instructor retries on schema-validation failures
+            messages=messages,
+        )
+
+    def _parse_with_groq(self, messages: list[dict], settings) -> ParsedDocument:
         # JSON mode (not tool-calling): Groq's tool-call schema validation is
         # strict and rejects the small quirks models produce (null vs [], string
         # vs date, anyOf/nullable arrays). JSON mode skips that — instructor
         # parses the JSON and validates with our lenient model instead.
         client = get_structured_llm("json")
-        settings = get_settings()
         return client.chat.completions.create(
             model=settings.PARSER_GROQ_MODEL,
             response_model=ParsedDocument,
             temperature=0,
             max_tokens=settings.GROQ_MAX_TOKENS,
             max_retries=2,  # instructor retries on schema-validation failures
-            messages=[
-                {"role": "system", "content": PARSER_SYSTEM},
-                {"role": "user", "content": build_parser_prompt(document.doc_type, safe_text)},
-            ],
+            messages=messages,
         )
 
     def _persist(self, parsed: ParsedDocument, document: Document, ctx: AgentContext) -> None:

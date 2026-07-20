@@ -20,6 +20,8 @@ services:
         sync: false
       - key: GROQ_API_KEY
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false
       # Model choices live in app/config.py (committed) — not here, so there's
       # a single source of truth. Change a model there and commit to deploy it.
       # Set to your deployed frontend URL after it's live (keep "*" for now).

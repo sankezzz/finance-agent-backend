@@ -5,7 +5,8 @@ pydantic-settings
 supabase
 python-multipart
 groq
-instructor
+google-genai
+instructor[google-genai]
 pypdf
 openpyxl
 httpx

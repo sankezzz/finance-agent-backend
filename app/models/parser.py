@@ -55,7 +55,15 @@ class ExtractedTransaction(BaseModel):
     @field_validator("direction", mode="before")
     @classmethod
     def _clean_direction(cls, v):
-        return v if v else TransactionDirection.debit
+        # Return an enum *instance* (not the raw 'credit' string) so validation
+        # passes under both Groq's lenient JSON mode and Gemini's strict
+        # structured-output mode. Junk falls back to debit.
+        if isinstance(v, TransactionDirection):
+            return v
+        try:
+            return TransactionDirection(str(v).strip().lower())
+        except (ValueError, AttributeError):
+            return TransactionDirection.debit
 
     @field_validator("currency", mode="before")
     @classmethod
@@ -70,6 +78,16 @@ class ExtractedFact(BaseModel):
     amount: float = Field(default=0.0)
     currency: str = "INR"
     meta: dict[str, object] = Field(default_factory=dict)
+
+    @field_validator("kind", mode="before")
+    @classmethod
+    def _clean_kind(cls, v):
+        # Coerce to a FactKind instance for Gemini's strict structured-output
+        # mode. `kind` is required with no sane default, so an invalid value
+        # raises here → instructor retries rather than mislabelling the fact.
+        if isinstance(v, FactKind):
+            return v
+        return FactKind(str(v).strip().lower())
 
     @field_validator("subtype", mode="before")
     @classmethod
