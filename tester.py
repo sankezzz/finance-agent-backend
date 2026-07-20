@@ -1,7 +1,7 @@
-from app.llm.client import get_llm
-get_llm()
+from app.db.supabase_client import get_supabase
+get_supabase()
 
-print("LLM ookkkk")
+print("supaarrrrr ookkkk")
 
 #uuid - fd87f41c-7a51-4a54-aa29-562d433449a3
 
